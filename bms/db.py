@@ -201,7 +201,8 @@ def bundle_root() -> Path:
 
 def _default_db_path() -> Path:
     configured_path = os.environ.get("BMS_DB")
-    mode = os.environ.get("BMS_MODE", "offline").strip().lower()
+    is_vercel = os.environ.get("VERCEL") == "1"
+    mode = os.environ.get("BMS_MODE", "online" if is_vercel else "offline").strip().lower()
     if mode not in {"offline", "online"}:
         raise RuntimeError("BMS_MODE must be either 'offline' or 'online'.")
     if mode == "online" and not configured_path:

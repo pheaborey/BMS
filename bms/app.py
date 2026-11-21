@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 import tempfile
 import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -56,13 +57,53 @@ ROOT = bundle_root()
 STATIC = ROOT / "static"
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
 
-app = FastAPI(title="BoreyBMS")
-APP_MODE = os.environ.get("BMS_MODE", "offline").strip().lower()
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+APP_MODE = os.environ.get("BMS_MODE", "online" if IS_VERCEL else "offline").strip().lower()
 SESSION_SECRET = os.environ.get("BMS_SESSION_SECRET")
+if IS_VERCEL and APP_MODE != "online":
+    raise RuntimeError("Set BMS_MODE=online in the Vercel project environment.")
 if APP_MODE == "online" and (not SESSION_SECRET or len(SESSION_SECRET) < 32):
     raise RuntimeError("BMS_SESSION_SECRET must be at least 32 characters in online mode.")
 if APP_MODE not in {"offline", "online"}:
     raise RuntimeError("BMS_MODE must be either 'offline' or 'online'.")
+
+
+def _initialize_databases() -> None:
+    if IS_VERCEL:
+        username = os.environ.get("BMS_ADMIN_USERNAME", "").strip().lower()
+        password = os.environ.get("BMS_ADMIN_PASSWORD", "")
+        if not username or not password:
+            raise RuntimeError(
+                "Set BMS_ADMIN_USERNAME and BMS_ADMIN_PASSWORD in the Vercel project environment."
+            )
+        if not USERNAME_RE.fullmatch(username):
+            raise RuntimeError("BMS_ADMIN_USERNAME must be 3-32 lowercase letters, digits, dots, underscores, or hyphens.")
+        if len(password) < 12:
+            raise RuntimeError("BMS_ADMIN_PASSWORD must be at least 12 characters.")
+        admin = {
+            "id": 1,
+            "username": username,
+            "password_hash": hash_password(password),
+            "full_name": os.environ.get("BMS_ADMIN_NAME", "").strip() or "Administrator",
+            "email": os.environ.get("BMS_ADMIN_EMAIL", "").strip(),
+        }
+        init_db(
+            seed_data=False,
+            admin=admin,
+            company_name=os.environ.get("BMS_COMPANY_NAME", "").strip() or "BoreyBMS",
+        )
+    else:
+        init_db()
+    init_store_registry()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    _initialize_databases()
+    yield
+
+
+app = FastAPI(title="BoreyBMS", lifespan=lifespan)
 
 
 class StoreDatabaseMiddleware(BaseHTTPMiddleware):
@@ -810,12 +851,6 @@ def parse_range(start: str, end: str):
     return start_d.isoformat(), end_d.isoformat()
 
 
-@app.on_event("startup")
-def _startup():
-    init_db()
-    init_store_registry()
-
-
 @app.get("/health")
 def health():
     return {"ok": True}
@@ -830,7 +865,7 @@ def favicon():
 def login_page(request: Request):
     if get_user(request):
         return RedirectResponse("/", status_code=303)
-    demos = DEMOS if request.session.get("store_id", "default") == "default" else []
+    demos = DEMOS if APP_MODE == "offline" and request.session.get("store_id", "default") == "default" else []
     return render(request, "login.html", page_title="", demos=demos, error="")
 
 
@@ -866,7 +901,7 @@ async def login_post(request: Request):
         request.session["uid"] = row["id"]
         request.session["auth_generation"] = generation["value"] if generation else "0"
         return RedirectResponse("/", status_code=303)
-    demos = DEMOS if request.session.get("store_id", "default") == "default" else []
+    demos = DEMOS if APP_MODE == "offline" and request.session.get("store_id", "default") == "default" else []
     return render(request, "login.html", page_title="", demos=demos, error=error)
 
 
@@ -2558,6 +2593,3 @@ async def _boom(request: Request, exc: Exception):
 
 
 app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
-
-init_db()
-init_store_registry()

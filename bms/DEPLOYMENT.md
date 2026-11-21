@@ -41,3 +41,30 @@ the configured `BMS_DB` file.
 To run the Windows installer in its normal local mode, leave `BMS_MODE`
 unset (or set it to `offline`). Do not reuse the online database path or
 session secret for the offline installation.
+
+## Vercel deployment (temporary SQLite mode)
+
+Vercel detects the FastAPI application from `app.py` and installs the packages
+listed in `requirements.txt`. Set the Vercel project's Root Directory to
+`bms`; leave the build command and output directory unset.
+
+Add these environment variables in **Project Settings > Environment Variables**
+for each environment you deploy:
+
+```text
+BMS_MODE=online
+BMS_DB=/tmp/boreybms.db
+BMS_SESSION_SECRET=<private random value of at least 32 characters>
+BMS_ADMIN_USERNAME=<initial admin username>
+BMS_ADMIN_PASSWORD=<private password of at least 12 characters>
+```
+
+Optionally set `BMS_ADMIN_NAME`, `BMS_ADMIN_EMAIL`, and `BMS_COMPANY_NAME`.
+The app creates the initial administrator on first startup and hides the
+development demo logins in online mode. Do not put these secrets in source
+control.
+
+**This configuration is for a launch check only, not production data.**
+`/tmp` is temporary and local to a Vercel function instance. Data, store
+databases, and saved backups can disappear or differ between instances. Do not
+enter real business data until the Neon/PostgreSQL migration is completed.

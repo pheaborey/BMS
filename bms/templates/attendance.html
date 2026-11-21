@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="card filters" method="get">
+  <label class="field">
+    <span>{{ t('work_date') }}</span>
+    <input type="date" name="work_date" value="{{ work_date }}">
+  </label>
+  <button class="btn btn-primary" type="submit">{{ t('apply') }}</button>
+</form>
+<section class="card attendance-tools">
+  <div>
+    <h2>{{ t('attendance_schedule') }}</h2>
+    <p class="hint">{{ t('work_start') }} {{ work_start }} · {{ t('work_end') }} {{ work_end }}</p>
+    <p class="hint">{{ t('break_time') }} {{ break_start }}–{{ break_end }}</p>
+  </div>
+  <form class="filters" method="get" action="/attendance/report.csv">
+    <label class="field"><span>{{ t('from') }}</span><input type="date" name="start" value="{{ work_date }}" required></label>
+    <label class="field"><span>{{ t('to') }}</span><input type="date" name="end" value="{{ work_date }}" required></label>
+    <button class="btn" type="submit">{{ t('export_attendance') }}</button>
+  </form>
+</section>
+<section class="card">
+  <header class="card-head"><h2>{{ t('roster') }}</h2></header>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t('full_name') }}</th><th>{{ t('department') }}</th><th>{{ t('status') }}</th>
+          <th>{{ t('in_time') }}</th><th>{{ t('out_time') }}</th>
+          {% if can_adjust %}<th>{{ t('adjust_time') }}</th>{% endif %}
+          <th>{{ t('actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in roster %}
+        <tr>
+          <td><strong>{{ row.full_name }}</strong><br><em class="muted">{{ row.position or '' }}</em></td>
+          <td>{{ row.department or '—' }}</td>
+          <td>{% if row.status %}<span class="badge badge-{{ row.status }}">{{ t(row.status) }}</span>{% else %}—{% endif %}</td>
+          <td>{{ row.check_in or '—' }}</td>
+          <td>{{ row.check_out or '—' }}</td>
+          {% if can_adjust %}
+          <td>
+            <form method="post" action="/attendance/adjust" class="attendance-adjust">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="employee_id" value="{{ row.id }}">
+              <input type="hidden" name="work_date" value="{{ work_date }}">
+              <label class="sr" for="check-in-{{ row.id }}">{{ t('in_time') }}</label>
+              <input id="check-in-{{ row.id }}" type="time" name="check_in" value="{{ row.check_in or '' }}">
+              <label class="sr" for="check-out-{{ row.id }}">{{ t('out_time') }}</label>
+              <input id="check-out-{{ row.id }}" type="time" name="check_out" value="{{ row.check_out or '' }}">
+              <button class="btn btn-tiny" type="submit">{{ t('save') }}</button>
+            </form>
+          </td>
+          {% endif %}
+          <td class="row-actions wrap">
+            {% if can('attendance', true) %}
+            <form method="post" action="/attendance/mark">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="employee_id" value="{{ row.id }}">
+              <input type="hidden" name="work_date" value="{{ work_date }}">
+              <button class="btn btn-tiny" name="action" value="in" type="submit">{{ t('check_in') }}</button>
+            </form>
+            <form method="post" action="/attendance/mark">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="employee_id" value="{{ row.id }}">
+              <input type="hidden" name="work_date" value="{{ work_date }}">
+              <button class="btn btn-tiny" name="action" value="out" type="submit">{{ t('check_out') }}</button>
+            </form>
+            <form method="post" action="/attendance/mark">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="employee_id" value="{{ row.id }}">
+              <input type="hidden" name="work_date" value="{{ work_date }}">
+              <button class="btn btn-tiny" name="action" value="absent" type="submit">{{ t('absent') }}</button>
+            </form>
+            <form method="post" action="/attendance/mark">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="employee_id" value="{{ row.id }}">
+              <input type="hidden" name="work_date" value="{{ work_date }}">
+              <button class="btn btn-tiny" name="action" value="leave" type="submit">{{ t('leave') }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="{{ 7 if can_adjust else 6 }}">{{ t('no_results') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

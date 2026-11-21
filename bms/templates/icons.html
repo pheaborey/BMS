@@ -1,0 +1,43 @@
+{% macro ico(name) %}
+<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+  {% if name == 'dashboard' %}
+  <rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/>
+  {% elif name == 'users' %}
+  <circle cx="9" cy="8" r="2.2"/><circle cx="16" cy="9" r="1.7"/><path d="M4.5 18.5c.6-2.4 2.6-3.8 4.5-3.8s3.9 1.4 4.5 3.8M14 14.8c1.3-.4 2.8-.2 3.8.8.7.7 1.2 1.7 1.5 2.9"/>
+  {% elif name == 'employees' %}
+  <rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="10" r="2.2"/><path d="M8 17c.5-1.8 1.9-2.8 4-2.8s3.5 1 4 2.8"/>
+  {% elif name == 'customers' %}
+  <circle cx="12" cy="8" r="2.4"/><path d="M6 19c.8-2.8 2.8-4.2 6-4.2s5.2 1.4 6 4.2"/>
+  {% elif name == 'suppliers' %}
+  <path d="M3 8h11v8H3z"/><path d="M14 11h4l3 3v2h-7"/><circle cx="7" cy="17.5" r="1.4"/><circle cx="17" cy="17.5" r="1.4"/>
+  {% elif name == 'products' %}
+  <path d="M12 3.5 20 8v8l-8 4.5L4 16V8z"/><path d="M12 12 20 8M12 12v8.5M12 12 4 8"/>
+  {% elif name == 'categories' %}
+  <path d="M4 7.5 12 4l8 3.5L12 11z"/><path d="M4 12.5 12 16l8-3.5"/><path d="M4 16.5 12 20l8-3.5"/>
+  {% elif name == 'stock' %}
+  <path d="M3.5 8 12 4l8.5 4L12 12z"/><path d="M3.5 8v8L12 20l8.5-4V8"/><path d="M12 12v8"/>
+  {% elif name == 'purchases' %}
+  <path d="M8 4h8l1 3H7z"/><path d="M6 7h12l-1 13H7z"/><path d="M10 11h4"/>
+  {% elif name == 'sales' %}
+  <path d="M7 3.5h10v17l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2z"/><path d="M9.5 8h5M9.5 12h5"/>
+  {% elif name == 'pos' %}
+  <rect x="3.5" y="5" width="17" height="12" rx="2"/><path d="M8 20h8M9 17v3M15 17v3"/>
+  {% elif name == 'invoices' %}
+  <path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5V8h4"/><path d="M9.5 12h5M9.5 15.5h5"/>
+  {% elif name == 'expenses' %}
+  <circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.2c.6-.8 1.4-1.2 2.5-1.2 1.5 0 2.5.8 2.5 1.9s-1 1.8-2.6 2.1c-1.5.3-2.4.8-2.4 2 0 1.1 1 1.9 2.5 1.9 1.1 0 2-.4 2.5-1.1"/>
+  {% elif name == 'reports' %}
+  <path d="M5 19V10M10 19V5M15 19v-6M20 19V8"/>
+  {% elif name == 'attendance' %}
+  <circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/>
+  {% elif name == 'settings' %}
+  <path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2"/><circle cx="8" cy="16" r="2"/>
+  {% elif name == 'permissions' %}
+  <rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 12h5M8 15h3"/><path d="m16 14 1.5 1.5L20 13"/>
+  {% elif name == 'stores' %}
+  <path d="M3.5 10 5 4h14l1.5 6"/><path d="M4 10v10h16V10"/><path d="M9 20v-6h6v6"/><path d="M3.5 10a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/>
+  {% elif name == 'backups' %}
+  <path d="M12 16V4m-4 4 4-4 4 4"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>
+  {% endif %}
+</svg>
+{% endmacro %}

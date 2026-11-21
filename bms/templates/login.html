@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-theme="{{ theme }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('login_title') }} · {{ t('app_name') }}</title>
+  <meta name="theme-color" content="#121816">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/fonts.css">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="login-screen">
+    <section class="login-hero">
+      <div class="hero-top">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 25V7l10 12L26 7v18"/></svg></span>
+        <form method="post" action="/locale" class="seg seg-dark">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          {% for code, label in languages %}
+          <button type="submit" name="language" value="{{ code }}" class="{% if lang == code %}on{% endif %}">{{ code|upper }}</button>
+          {% endfor %}
+          <button type="submit" name="theme" value="{{ 'light' if theme == 'dark' else 'dark' }}">{{ t('light') if theme == 'dark' else t('dark') }}</button>
+        </form>
+      </div>
+      <p class="kicker">{{ t('kicker') }}</p>
+      <h1>{{ t('hero_title') }}</h1>
+      <p class="lede">{{ t('hero_body') }}</p>
+      <p class="hero-foot">{{ settings.company_name }} · {{ t('footer_tech') }}</p>
+    </section>
+    <section class="login-panel">
+      <form class="login-card" method="post" action="/login">
+        <h2>{{ t('login_title') }}</h2>
+        <p class="muted">{{ t('login_sub') }}</p>
+        {% if flash %}<p class="flash flash-{{ flash.kind }}" role="status">{{ flash.text }}</p>{% endif %}
+        {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field">
+          <span>{{ t('username') }}</span>
+          <input name="username" autocomplete="username" required>
+        </label>
+        <label class="field">
+          <span>{{ t('password') }}</span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">{{ t('sign_in') }}</button>
+      </form>
+      {% if demos %}
+      <div class="demo-block">
+        <p class="kicker">{{ t('demo_hint') }}</p>
+        <div class="role-grid">
+          {% for username, password, role, hint in demos %}
+          <form method="post" action="/login">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="username" value="{{ username }}">
+            <input type="hidden" name="password" value="{{ password }}">
+            <button class="role-card" type="submit">
+              <strong>{{ t(role) }}</strong>
+              <span>{{ username }} · {{ password }}</span>
+              <em>{{ t(hint) }}</em>
+            </button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      <section class="login-contact" aria-labelledby="login-contact-heading">
+        <h3 id="login-contact-heading">{{ t('developer_contact') }}</h3>
+        <p><span>{{ t('developer') }}</span><strong>Mr. PHEA BOREY</strong></p>
+        <p><span>{{ t('contact') }}</span><span>+855 069563236</span></p>
+        <p><span>{{ t('telegram') }}</span><a href="https://t.me/boreytechnology2" target="_blank" rel="noopener noreferrer">t.me/boreytechnology2</a></p>
+      </section>
+    </section>
+  </div>
+</body>
+</html>

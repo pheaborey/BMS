@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <header class="card-head">
+    <div>
+      <h2>{{ po.supplier_name }}</h2>
+      <p class="muted">{{ po.order_date }} · {{ po.author or '—' }}</p>
+    </div>
+    <span class="badge badge-{{ po.status }}">{{ t(po.status) }}</span>
+  </header>
+  {% if po.notes %}<p>{{ po.notes }}</p>{% endif %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{ t('product') }}</th><th>{{ t('sku') }}</th><th class="num">{{ t('qty') }}</th><th class="num">{{ t('unit_cost') }}</th><th class="num">{{ t('line_total') }}</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.sku }}</td>
+          <td class="num">{{ qty(item.qty) }}</td>
+          <td class="num">{{ money(item.cost) }}</td>
+          <td class="num">{{ money(item.line_total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="grand"><span>{{ t('total') }}</span> <strong>{{ money(po.total) }}</strong></p>
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="/purchases">{{ t('back') }}</a>
+    {% if po.status == 'ordered' and can('purchases', true) %}
+    <form method="post" action="/purchases/{{ po.id }}/receive" onsubmit="return confirm({{ t('confirm_receive')|tojson }})">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn btn-primary" type="submit">{{ t('receive') }}</button>
+    </form>
+    <form method="post" action="/purchases/{{ po.id }}/cancel" onsubmit="return confirm({{ t('confirm_cancel')|tojson }})">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn btn-danger" type="submit">{{ t('cancel_order') }}</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

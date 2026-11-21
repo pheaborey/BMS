@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head no-print">
+  <p class="count">{{ t('record_count', n=products|length) }}</p>
+  <div class="catalogue-actions">
+    <a class="btn btn-ghost" href="/products">{{ t('products') }}</a>
+    <button class="btn btn-primary" type="button" onclick="window.print()">{{ t('print_catalogue') }}</button>
+  </div>
+</div>
+<section class="card catalogue-sheet">
+  <header class="catalogue-heading">
+    <p class="kicker">{{ settings.company_name }}</p>
+    <h2>{{ t('catalogue') }}</h2>
+    <p>{{ t('catalogue_subtitle') }}</p>
+  </header>
+  {% if products %}
+  <div class="catalogue-grid">
+    {% for product in products %}
+    <article class="catalogue-card">
+      {% if product.image_mime %}
+      <img class="catalogue-image" src="/products/{{ product.id }}/image" alt="{{ product.name }}">
+      {% else %}
+      <div class="catalogue-image catalogue-placeholder" aria-hidden="true">{{ product.name[:1]|upper }}</div>
+      {% endif %}
+      <div class="catalogue-details">
+        {% if product.category_name %}<p class="catalogue-category">{{ product.category_name }}</p>{% endif %}
+        <h3>{{ product.name }}</h3>
+        <p class="catalogue-price">{{ money(product.price) }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="catalogue-empty">{{ t('no_catalogue_products') }}</p>
+  {% endif %}
+</section>
+{% endblock %}

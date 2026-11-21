@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+build/
+data/*.db
+data/*.db-*
+data/*.sqlite
+data/*.sqlite3
+data/stores/
+data/backups/
+dist/data/
+dist/*.exe

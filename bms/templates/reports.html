@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="card filters" method="get">
+  <label class="field"><span>{{ t('from') }}</span><input type="date" name="start" value="{{ start }}"></label>
+  <label class="field"><span>{{ t('to') }}</span><input type="date" name="end" value="{{ end }}"></label>
+  <button class="btn btn-primary" type="submit">{{ t('apply') }}</button>
+  <a class="btn" href="/reports/summary.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+</form>
+<section class="kpi-grid">
+  <article class="kpi"><span>{{ t('revenue') }}</span><strong>{{ money(revenue) }}</strong><em>{{ tickets }} {{ t('sales')|lower }}</em></article>
+  <article class="kpi"><span>{{ t('cogs') }}</span><strong>{{ money(cogs) }}</strong></article>
+  <article class="kpi"><span>{{ t('gross_profit') }}</span><strong>{{ money(gross) }}</strong></article>
+  <article class="kpi"><span>{{ t('net_profit') }}</span><strong>{{ money(net) }}</strong><em>{{ t('expense_total') }} {{ money(expenses) }}</em></article>
+</section>
+{% if trend %}
+<section class="card">
+  <header class="card-head">
+    <h2>{{ t('sales_trend') }}</h2>
+    <a class="btn btn-tiny" href="/reports/sales.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+  </header>
+  <div class="bars" role="img" aria-label="{{ t('sales_trend') }}">
+    {% for point in trend %}
+    <div class="bar" title="{{ point.label }} · {{ money(point.total) }}">
+      <div class="bar-fill" style="height: {{ (point.total / peak * 100)|round(1) }}%"></div>
+      <span>{{ point.label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<div class="split">
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('top_products') }}</h2>
+      <a class="btn btn-tiny" href="/reports/top-products.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('product') }}</th><th class="num">{{ t('qty_sold') }}</th><th class="num">{{ t('revenue') }}</th></tr></thead>
+        <tbody>
+          {% for row in top %}
+          <tr><td>{{ row.name }}</td><td class="num">{{ qty(row.qty) }}</td><td class="num">{{ money(row.revenue) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="3">{{ t('no_sales') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('by_payment') }}</h2>
+      <a class="btn btn-tiny" href="/reports/payments.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('payment') }}</th><th class="num">{{ t('orders') }}</th><th class="num">{{ t('total') }}</th></tr></thead>
+        <tbody>
+          {% for row in payments %}
+          <tr><td>{{ t(row.payment_method) }}</td><td class="num">{{ row.tickets }}</td><td class="num">{{ money(row.total) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="3">{{ t('no_sales') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="split">
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('by_supplier') }}</h2>
+      <a class="btn btn-tiny" href="/reports/suppliers.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <p class="muted">{{ money(purchases) }}</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('supplier') }}</th><th class="num">{{ t('orders') }}</th><th class="num">{{ t('total') }}</th></tr></thead>
+        <tbody>
+          {% for row in by_supplier %}
+          <tr><td>{{ row.name }}</td><td class="num">{{ row.orders }}</td><td class="num">{{ money(row.total) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="3">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('by_expense') }}</h2>
+      <a class="btn btn-tiny" href="/reports/expense-summary.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('category') }}</th><th class="num">{{ t('total') }}</th></tr></thead>
+        <tbody>
+          {% for row in by_expense %}
+          <tr><td>{{ t(row.category) }}</td><td class="num">{{ money(row.total) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="2">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="split">
+  <section class="card">
+    <header class="card-head">
+      <div>
+        <h2>{{ t('stock_snapshot') }}</h2>
+      </div>
+      <a class="btn btn-tiny" href="/reports/stock.csv">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('sku') }}</th><th>{{ t('product') }}</th><th class="num">{{ t('current_stock') }}</th><th>{{ t('unit') }}</th><th class="num">{{ t('unit_cost') }}</th><th class="num">{{ t('reorder_level') }}</th><th class="num">{{ t('inventory_value') }}</th></tr></thead>
+        <tbody>
+          {% for row in stock_report %}
+          <tr><td>{{ row.sku }}</td><td>{{ row.name }}</td><td class="num">{{ qty(row.stock) }}</td><td>{{ row.unit }}</td><td class="num">{{ money(row.cost) }}</td><td class="num">{{ qty(row.reorder_level) }}</td><td class="num">{{ money(row.stock_value) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="7">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('expenses') }}</h2>
+      <a class="btn btn-tiny" href="/reports/expenses.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('date') }}</th><th>{{ t('category') }}</th><th class="num">{{ t('amount') }}</th><th>{{ t('note') }}</th></tr></thead>
+        <tbody>
+          {% for row in expense_details %}
+          <tr><td>{{ row.expense_date }}</td><td>{{ t(row.category) }}</td><td class="num">{{ money(row.amount) }}</td><td>{{ row.note or '—' }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="4">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="split">
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('attendance') }}</h2>
+      <a class="btn btn-tiny" href="/reports/attendance.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('work_date') }}</th><th>{{ t('employee') }}</th><th>{{ t('department') }}</th><th>{{ t('status') }}</th><th>{{ t('check_in') }}</th><th>{{ t('check_out') }}</th><th>{{ t('note') }}</th></tr></thead>
+        <tbody>
+          {% for row in attendance_rows %}
+          <tr><td>{{ row.work_date }}</td><td>{{ row.full_name }}{% if row.position %}<br><em class="muted">{{ row.position }}</em>{% endif %}</td><td>{{ row.department or '—' }}</td><td>{{ t(row.status) }}</td><td>{{ row.check_in or '—' }}</td><td>{{ row.check_out or '—' }}</td><td>{{ row.note or '—' }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="7">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('purchases') }}</h2>
+      <a class="btn btn-tiny" href="/reports/purchases.csv?start={{ start }}&amp;end={{ end }}">{{ t('export_csv') }}</a>
+    </header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ t('number') }}</th><th>{{ t('date') }}</th><th>{{ t('supplier') }}</th><th>{{ t('status') }}</th><th class="num">{{ t('total') }}</th></tr></thead>
+        <tbody>
+          {% for row in purchase_details %}
+          <tr><td>{{ row.number }}</td><td>{{ row.order_date }}</td><td>{{ row.supplier }}</td><td>{{ t(row.status) }}</td><td class="num">{{ money(row.total) }}</td></tr>
+          {% else %}<tr><td class="empty" colspan="5">{{ t('no_results') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<p class="hint block-hint">{{ t('profit_note') }}</p>
+{% endblock %}

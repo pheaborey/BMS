@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "icons.html" import ico %}
+{% block content %}
+<form class="stack" method="post" action="/permissions" id="permissions-form">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <section class="card">
+    <p class="hint">{{ t('permissions_hint') }}</p>
+    <p class="hint">{{ t('admin_full_access') }}</p>
+  </section>
+  {% for group in permission_groups %}
+  <section class="card">
+    <div class="card-head"><h2>{{ t(group.group) }}</h2></div>
+    <div class="table-wrap">
+      <table class="permission-table">
+        <thead>
+          <tr>
+            <th rowspan="2">{{ t('menu_item') }}</th>
+            {% for role in roles %}<th colspan="2">{{ t(role) }}</th>{% endfor %}
+          </tr>
+          <tr>
+            {% for role in roles %}
+              {% if role == 'admin' %}
+              <th colspan="2">{{ t('access') }}</th>
+              {% else %}
+              <th>{{ t('view_access') }}</th>
+              <th>{{ t('write_access') }}</th>
+              {% endif %}
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in group["items"] %}
+          <tr>
+            <th scope="row">
+              <span class="permission-menu-item">{{ ico(item.icon) }}{{ t(item.key) }}</span>
+            </th>
+            {% for role in roles %}
+              {% if role == 'admin' %}
+              <td class="permission-locked" colspan="2">{{ t('admin_full_access') }}</td>
+              {% else %}
+              <td>
+                <label class="permission-check">
+                  <input type="checkbox" name="perm__{{ role }}__{{ item.key }}__view" value="1"
+                    data-view data-permission="{{ role }}__{{ item.key }}"
+                    aria-label="{{ t('view_access') }} - {{ t(role) }} - {{ t(item.key) }}"
+                    {% if item.access[role].view %}checked{% endif %}>
+                </label>
+              </td>
+              <td>
+                <label class="permission-check">
+                  <input type="checkbox" name="perm__{{ role }}__{{ item.key }}__write" value="1"
+                    data-write="{{ role }}__{{ item.key }}"
+                    aria-label="{{ t('write_access') }} - {{ t(role) }} - {{ t(item.key) }}"
+                    {% if item.access[role].write %}checked{% endif %}>
+                </label>
+              </td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ t('save') }}</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var form = document.getElementById("permissions-form");
+    if (!form) return;
+    form.querySelectorAll("[data-view]").forEach(function (view) {
+      var write = form.querySelector('[data-write="' + view.dataset.permission + '"]');
+      if (!write) return;
+      function sync() {
+        write.disabled = !view.checked;
+        if (!view.checked) write.checked = false;
+      }
+      view.addEventListener("change", sync);
+      sync();
+    });
+  })();
+</script>
+{% endblock %}

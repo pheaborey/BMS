@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="no-print form-actions">
+  <a class="btn btn-ghost" href="/invoices">{{ t('back') }}</a>
+  <button class="btn btn-primary" type="button" onclick="window.print()">{{ t('print') }}</button>
+</div>
+<article class="sheet">
+  <header class="sheet-head">
+    <div>
+      <p class="kicker">{{ t('invoice') }}</p>
+      <h2>{{ company.company_name }}</h2>
+      <p>{{ company.company_address }}<br>{{ company.company_phone }}<br>{{ company.company_email }}</p>
+    </div>
+    <div class="sheet-meta">
+      <p><span>{{ t('invoice_no') }}</span><strong>{{ sale.number }}</strong></p>
+      <p><span>{{ t('date') }}</span><strong>{{ sale.sale_date }}</strong></p>
+      <p><span>{{ t('status') }}</span><strong>{{ t(sale.status) }}</strong></p>
+    </div>
+  </header>
+  <section class="sheet-bill">
+    <p class="kicker">{{ t('bill_to') }}</p>
+    <strong>{{ sale.customer_name or t('walk_in') }}</strong>
+    {% if sale.customer_company %}<p>{{ sale.customer_company }}</p>{% endif %}
+    {% if sale.customer_address %}<p>{{ sale.customer_address }}</p>{% endif %}
+    {% if sale.customer_phone %}<p>{{ sale.customer_phone }}</p>{% endif %}
+  </section>
+  <table>
+    <thead>
+      <tr><th>{{ t('product') }}</th><th class="num">{{ t('qty') }}</th><th class="num">{{ t('price') }}</th><th class="num">{{ t('line_total') }}</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td class="num">{{ qty(item.qty) }}</td>
+        <td class="num">{{ money(item.price) }}</td>
+        <td class="num">{{ money(item.line_total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <dl class="totals">
+    <div><dt>{{ t('subtotal') }}</dt><dd>{{ money(sale.subtotal) }}</dd></div>
+    <div><dt>{{ t('discount') }}</dt><dd>{{ money(sale.discount) }}</dd></div>
+    <div><dt>{{ t('tax') }} {{ qty(sale.tax_rate) }}%</dt><dd>{{ money(sale.tax) }}</dd></div>
+    <div class="grand-line"><dt>{{ t('total') }}</dt><dd>{{ money(sale.total) }}</dd></div>
+    <div><dt>{{ t(sale.payment_method) }}</dt><dd>{{ money(sale.paid) }}</dd></div>
+    <div><dt>{{ t('change') }}</dt><dd>{{ money(sale.change_due) }}</dd></div>
+  </dl>
+  <footer class="sheet-foot">
+    <p>{{ t('thanks') }}</p>
+    <p>{{ t('prepared_by') }} {{ sale.seller or '—' }}</p>
+  </footer>
+</article>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="pos-app" data-csrf="{{ csrf }}" data-tax="{{ tax_rate }}" data-currency="{{ currency }}" data-all="{{ t('all_categories') }}">
+  <div class="pos">
+    <section class="shelf">
+      <div class="shelf-tools">
+        <label class="sr" for="pos-search">{{ t('search_products') }}</label>
+        <input id="pos-search" placeholder="{{ t('search_products') }}" autocomplete="off">
+        <div id="pos-cats" class="chips"></div>
+      </div>
+      <div id="pos-grid" class="product-grid"></div>
+    </section>
+    <section class="ticket card">
+      <header class="card-head"><h2>{{ t('cart') }}</h2></header>
+      <label class="field">
+        <span>{{ t('customer') }}</span>
+        <select id="pos-customer">
+          <option value="">{{ t('walk_in') }}</option>
+          {% for customer in customers %}
+          <option value="{{ customer.id }}">{{ customer.name }}</option>
+          {% endfor %}
+        </select>
+        <small class="hint">{{ t('customer_optional') }}</small>
+      </label>
+      <div id="pos-lines" class="ticket-lines"></div>
+      <p id="pos-empty" class="muted">{{ t('empty_cart') }}</p>
+      <div class="ticket-math">
+        <label class="field">
+          <span>{{ t('discount') }}</span>
+          <input id="pos-discount" type="number" min="0" step="0.01" value="0">
+        </label>
+        <label class="field">
+          <span>{{ t('payment_method') }}</span>
+          <select id="pos-method">
+            <option value="cash">{{ t('cash') }}</option>
+            <option value="card">{{ t('card') }}</option>
+            <option value="transfer">{{ t('transfer') }}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>{{ t('amount_tendered') }}</span>
+          <input id="pos-paid" type="number" min="0" step="0.01" value="0">
+        </label>
+      </div>
+      <dl class="totals compact">
+        <div><dt>{{ t('subtotal') }}</dt><dd id="sum-sub">—</dd></div>
+        <div><dt>{{ t('tax') }} <span id="sum-rate"></span></dt><dd id="sum-tax">—</dd></div>
+        <div class="grand-line"><dt>{{ t('total') }}</dt><dd id="sum-total">—</dd></div>
+        <div><dt>{{ t('change_due') }}</dt><dd id="sum-change">—</dd></div>
+      </dl>
+      <p id="pos-error" class="form-error" hidden></p>
+      <button class="btn btn-primary btn-block" id="pos-pay" type="button">{{ t('checkout') }}</button>
+    </section>
+  </div>
+</div>
+<script id="catalog-data" type="application/json">{{ catalog|tojson }}</script>
+{% endblock %}

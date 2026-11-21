@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="quick">
+  <span class="kicker">{{ t('quick') }}</span>
+  {% if can('pos') %}<a class="btn btn-primary" href="/pos">{{ t('pos') }}</a>{% endif %}
+  {% if can('purchases', true) %}<a class="btn" href="/purchases/new">{{ t('new_purchase') }}</a>{% endif %}
+  {% if can('attendance') %}<a class="btn" href="/attendance">{{ t('attendance') }}</a>{% endif %}
+  {% if can('stock') %}<a class="btn" href="/stock">{{ t('stock') }}</a>{% endif %}
+</div>
+
+{% if scope == 'full' %}
+<section class="kpi-grid">
+  <article class="kpi"><span>{{ t('today_sales') }}</span><strong>{{ money(today_total) }}</strong><em>{{ tickets }} {{ t('tickets_today')|lower }}</em></article>
+  <article class="kpi"><span>{{ t('month_sales') }}</span><strong>{{ money(month_sales) }}</strong><em>{{ t('revenue') }}</em></article>
+  <article class="kpi"><span>{{ t('month_expenses') }}</span><strong>{{ money(month_exp) }}</strong><em>{{ t('expense_total') }}</em></article>
+  <article class="kpi {% if low_count %}kpi-alert{% endif %}"><span>{{ t('low_stock') }}</span><strong>{{ low_count }}</strong><em><a href="/stock">{{ t('view_all') }}</a></em></article>
+</section>
+<section class="kpi-grid kpi-secondary">
+  <article class="kpi slim"><span>{{ t('inventory_value') }}</span><strong>{{ money(inventory) }}</strong></article>
+  <article class="kpi slim"><span>{{ t('open_orders') }}</span><strong>{{ open_orders }}</strong></article>
+  <article class="kpi slim"><span>{{ t('present_today') }}</span><strong>{{ present }}</strong></article>
+  <article class="kpi slim"><span>{{ t('customers_count') }}</span><strong>{{ customers }}</strong></article>
+</section>
+{% elif scope == 'cashier' %}
+<section class="kpi-grid">
+  <article class="kpi"><span>{{ t('today_sales') }}</span><strong>{{ money(today_total) }}</strong></article>
+  <article class="kpi"><span>{{ t('tickets_today') }}</span><strong>{{ tickets }}</strong></article>
+  <article class="kpi"><span>{{ t('month_sales') }}</span><strong>{{ money(month_sales) }}</strong></article>
+  <article class="kpi"><span>{{ t('customers_count') }}</span><strong>{{ customers }}</strong></article>
+</section>
+{% else %}
+<section class="kpi-grid">
+  <article class="kpi"><span>{{ t('present_today') }}</span><strong>{{ present }}</strong></article>
+  <article class="kpi {% if low_count %}kpi-alert{% endif %}"><span>{{ t('low_stock') }}</span><strong>{{ low_count }}</strong></article>
+  <article class="kpi"><span>{{ t('product_count') }}</span><strong>{{ product_count }}</strong></article>
+  <article class="kpi"><span>{{ t('open_orders') }}</span><strong>{{ open_orders }}</strong></article>
+</section>
+{% endif %}
+
+<div class="split">
+  <section class="card">
+    <header class="card-head"><h2>{{ t('sales_trend') }}</h2></header>
+    <div class="bars" role="img" aria-label="{{ t('sales_trend') }}">
+      {% for point in trend %}
+      <div class="bar" title="{{ point.label }} · {{ money(point.total) }}">
+        <div class="bar-fill" style="height: {{ (point.total / peak * 100)|round(1) }}%"></div>
+        <span>{{ point.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="card">
+    <header class="card-head">
+      <h2>{{ t('low_stock') }}</h2>
+      {% if can('stock') %}<a href="/stock">{{ t('view_all') }}</a>{% endif %}
+    </header>
+    {% if low %}
+    <ul class="plain">
+      {% for item in low %}
+      <li>
+        <span><strong>{{ item.name }}</strong><em>{{ item.sku }}</em></span>
+        <b class="is-low">{{ qty(item.stock) }} / {{ qty(item.reorder_level) }}</b>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">{{ t('no_low_stock') }}</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if scope != 'staff' %}
+<section class="card">
+  <header class="card-head">
+    <h2>{{ t('recent_sales') }}</h2>
+    {% if can('sales') %}<a href="/sales">{{ t('view_all') }}</a>{% endif %}
+  </header>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>{{ t('number') }}</th><th>{{ t('date') }}</th><th>{{ t('customer') }}</th><th>{{ t('payment') }}</th><th class="num">{{ t('total') }}</th></tr>
+      </thead>
+      <tbody>
+        {% for row in recent %}
+        <tr>
+          <td><a href="/invoices/{{ row.id }}">{{ row.number }}</a></td>
+          <td>{{ row.sale_date }}</td>
+          <td>{{ row.customer_name or t('walk_in') }}</td>
+          <td><span class="badge badge-{{ row.payment_method }}">{{ t(row.payment_method) }}</span></td>
+          <td class="num">{{ money(row.total) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty">{{ t('no_sales') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

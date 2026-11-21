@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <header class="card-head">
+    <div>
+      <h2>{{ t('create_backup') }}</h2>
+      <p class="muted">{{ t('backup_scope') }}</p>
+    </div>
+  </header>
+  <form class="stack" method="post" action="/backups/create">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="choice-grid">
+      <label class="choice">
+        <input type="radio" name="mode" value="full" checked>
+        <strong>{{ t('backup_full') }}</strong>
+        <em>{{ t('backup_full_hint') }}</em>
+      </label>
+      <label class="choice">
+        <input type="radio" name="mode" value="tables">
+        <strong>{{ t('backup_selected') }}</strong>
+        <em>{{ t('backup_selected_hint') }}</em>
+      </label>
+    </div>
+    <fieldset class="backup-table-list" id="backup-table-list" disabled>
+      <legend>{{ t('backup_tables') }}</legend>
+      <div class="backup-table-grid">
+        {% for table in backup_tables %}
+        <label class="backup-table">
+          <input type="checkbox" name="tables" value="{{ table.name }}">
+          <span>{{ table.label }} <small>{{ table.name }}</small></span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit" name="action" value="download">{{ t('download_backup') }}</button>
+      <button class="btn btn-ghost" type="submit" name="action" value="save">{{ t('save_backup') }}</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <header class="card-head">
+    <div>
+      <h2>{{ t('restore_backup') }}</h2>
+      <p class="muted">{{ t('restore_backup_hint') }}</p>
+    </div>
+  </header>
+  <div class="flash flash-bad" role="note">{{ t('restore_warning') }}</div>
+  <form class="stack backup-restore" method="post" action="/backups/restore" enctype="multipart/form-data"
+        onsubmit="return confirm({{ t('restore_confirm')|tojson }})">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% if saved_backups %}
+    <label class="check">
+      <input type="radio" name="backup_source" value="saved" checked>
+      <span>{{ t('saved_backup') }}</span>
+    </label>
+    <label class="field backup-saved-select">
+      <span>{{ t('saved_backup') }}</span>
+      <select name="saved_backup" id="saved-backup">
+        {% for backup in saved_backups %}
+        <option value="{{ backup.name }}">{{ backup.name }} · {{ (backup.size / 1024)|round|int }} KB · {{ backup.modified }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="check">
+      <input type="radio" name="backup_source" value="upload">
+      <span>{{ t('upload_backup') }}</span>
+    </label>
+    {% else %}
+    <label class="check">
+      <input type="radio" name="backup_source" value="upload" checked>
+      <span>{{ t('upload_backup') }}</span>
+    </label>
+    {% endif %}
+    <label class="field">
+      <span>{{ t('backup_file') }}</span>
+      <input type="file" name="backup_file" id="backup-file" accept=".zip,application/zip" {% if not saved_backups %}required{% endif %}>
+    </label>
+    <button class="btn btn-danger" type="submit">{{ t('restore_backup') }}</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var sources = document.querySelectorAll('input[name="backup_source"]');
+    var savedBackup = document.getElementById("saved-backup");
+    var backupFile = document.getElementById("backup-file");
+    function syncBackupSource() {
+      var selected = document.querySelector('input[name="backup_source"]:checked');
+      var useSaved = selected && selected.value === "saved";
+      if (savedBackup) savedBackup.disabled = !useSaved;
+      if (backupFile) {
+        backupFile.disabled = !!useSaved;
+        backupFile.required = !useSaved;
+      }
+    }
+    sources.forEach(function (source) {
+      source.addEventListener("change", syncBackupSource);
+    });
+    syncBackupSource();
+
+    var radios = document.querySelectorAll('input[name="mode"]');
+    var tableList = document.getElementById("backup-table-list");
+    if (!radios.length || !tableList) return;
+    function syncTableSelection() {
+      var selected = document.querySelector('input[name="mode"]:checked');
+      tableList.disabled = !selected || selected.value !== "tables";
+    }
+    radios.forEach(function (radio) {
+      radio.addEventListener("change", syncTableSelection);
+    });
+    syncTableSelection();
+  })();
+</script>
+{% endblock %}

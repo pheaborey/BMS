@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+{% if low %}
+<section class="card alert-card">
+  <h2>{{ t('low_stock') }}</h2>
+  <ul class="plain">
+    {% for item in low %}
+    <li><span><strong>{{ item.name }}</strong><em>{{ item.sku }}</em></span><b class="is-low">{{ qty(item.stock) }} / {{ qty(item.reorder_level) }} {{ item.unit }}</b></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if can_write %}
+<form class="card form-card" method="post" action="/stock/adjust">
+  <h2>{{ t('adjust_stock') }}</h2>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="form-grid">
+    <label class="field span-2">
+      <span>{{ t('product') }}</span>
+      <select name="product_id" required>
+        {% for product in products %}
+        <option value="{{ product.id }}">{{ product.name }} · {{ product.sku }} · {{ qty(product.stock) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>{{ t('direction') }}</span>
+      <select name="direction">
+        <option value="in">{{ t('stock_in') }}</option>
+        <option value="out">{{ t('stock_out') }}</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>{{ t('qty') }}</span>
+      <input type="number" name="qty" min="0.01" step="0.01" value="1" required>
+    </label>
+    <label class="field span-2">
+      <span>{{ t('reason') }}</span>
+      <input name="note" required placeholder="{{ t('reason') }}">
+    </label>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ t('save') }}</button>
+  </div>
+</form>
+{% endif %}
+
+<section class="card">
+  <header class="card-head"><h2>{{ t('movement_history') }}</h2></header>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>{{ t('date') }}</th><th>{{ t('product') }}</th><th>{{ t('kind') }}</th><th class="num">{{ t('qty') }}</th><th class="num">{{ t('balance') }}</th><th>{{ t('ref') }}</th><th>{{ t('note') }}</th></tr>
+      </thead>
+      <tbody>
+        {% for move in moves %}
+        <tr>
+          <td>{{ move.created_at }}</td>
+          <td>{{ move.product_name }}<br><em class="muted">{{ move.sku }}</em></td>
+          <td><span class="badge badge-{{ move.kind }}">{{ t(move.kind) }}</span></td>
+          <td class="num">{{ qty(move.qty) }}</td>
+          <td class="num">{{ qty(move.balance_after) }}</td>
+          <td>{{ move.ref or '—' }}</td>
+          <td>{{ move.note or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="7">{{ t('no_movement') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

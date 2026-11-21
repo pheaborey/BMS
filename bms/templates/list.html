@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <form class="search" method="get">
+    <label class="sr" for="q">{{ t('search') }}</label>
+    <input id="q" name="q" value="{{ q }}" placeholder="{{ t('search') }}">
+    <button class="btn" type="submit">{{ t('search') }}</button>
+  </form>
+  <p class="count">{{ t('record_count', n=rows|length) }}</p>
+  {% if entity == 'products' %}
+  <a class="btn" href="/catalogue">{{ t('catalogue') }}</a>
+  {% endif %}
+  {% if can_write %}
+  <a class="btn btn-primary" href="/{{ entity }}/new">{{ t('create') }}</a>
+  {% endif %}
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          {% for col in columns %}<th class="{% if col.kind == 'money' %}num{% endif %}">{{ t(col.label) }}</th>{% endfor %}
+          {% if can_write %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for col in columns %}
+          <td class="{% if col.kind == 'money' %}num{% endif %}">
+            {% if col.kind == 'product' %}
+            <div class="product-list-item">
+              <span class="product-list-thumb">
+                {% if row.image_mime %}
+                <img src="/products/{{ row.id }}/image" alt="" loading="lazy">
+                {% else %}
+                <span aria-hidden="true">{{ row.name[:1]|upper }}</span>
+                {% endif %}
+              </span>
+              <span class="product-list-copy">
+                <strong>{{ row.name }}</strong>
+                <small>{{ t('sku') }} {{ row.sku }}</small>
+              </span>
+            </div>
+            {% elif col.kind == 'money' %}{{ money(row[col.key]) }}
+            {% elif col.kind == 'badge' %}<span class="badge badge-{{ row[col.key] }}">{{ t(row[col.key]|string) }}</span>
+            {% elif col.kind == 'bool' %}<span class="badge {{ 'badge-active' if row[col.key] else 'badge-inactive' }}">{{ t('active') if row[col.key] else t('inactive') }}</span>
+            {% elif col.kind == 'stock' %}<span class="{% if row.stock <= row.reorder_level %}is-low{% endif %}">{{ qty(row.stock) }}</span>
+            {% else %}{{ row[col.key] if row[col.key] not in (none, '') else '—' }}
+            {% endif %}
+          </td>
+          {% endfor %}
+          {% if can_write %}
+          <td class="row-actions">
+            <a href="/{{ entity }}/{{ row.id }}/edit">{{ t('edit') }}</a>
+            <form method="post" action="/{{ entity }}/{{ row.id }}/delete" onsubmit="return confirm({{ t('confirm_delete')|tojson }})">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <button class="link danger" type="submit">{{ t('delete') }}</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="{{ columns|length + (1 if can_write else 0) }}">{{ t('no_results') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

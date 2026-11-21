@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="card form-card" method="post" action="/{{ entity }}/save" enctype="multipart/form-data">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  {% if row_id %}<input type="hidden" name="id" value="{{ row_id }}">{% endif %}
+  <div class="form-grid">
+    {% for field in fields %}
+      {% if field.type == 'checkbox' %}
+      <label class="check span-2">
+        <input type="checkbox" name="{{ field.name }}" value="1" {% if values[field.name] %}checked{% endif %}>
+        <span>{{ t(field.label) }}</span>
+      </label>
+      {% else %}
+      <label class="field {% if field.type == 'textarea' or field.span == 2 %}span-2{% endif %}">
+        <span>{{ t(field.label) }}{% if field.required %} *{% endif %}</span>
+        {% if field.type == 'textarea' %}
+        <textarea name="{{ field.name }}" rows="3">{{ values[field.name] }}</textarea>
+        {% elif field.type == 'select' %}
+        <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+          {% if not field.required %}<option value="">{{ t('none') }}</option>{% endif %}
+          {% for opt in options.get(field.name, []) %}
+          <option value="{{ opt.value }}" {% if values[field.name]|string == opt.value|string %}selected{% endif %}>{{ opt.label }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input
+          type="{{ 'number' if field.type in ('number', 'money') else field.type }}"
+          name="{{ field.name }}"
+          value="{{ values[field.name] }}"
+          {% if field.type in ('number', 'money') %}step="0.01" min="0"{% endif %}
+          {% if field.required and field.type != 'password' %}required{% endif %}
+          {% if field.type == 'password' %}autocomplete="new-password"{% endif %}
+        >
+        {% endif %}
+        {% if field.name == 'password' and row_id %}<small class="hint">{{ t('password_keep') }}</small>{% endif %}
+        {% if field.name == 'sku' %}<small class="hint">{{ t('sku_optional') }}</small>{% endif %}
+        {% if errors.get(field.name) %}<small class="err">{{ errors[field.name] }}</small>{% endif %}
+      </label>
+      {% endif %}
+    {% endfor %}
+    {% if entity == 'products' %}
+    <div
+      class="product-image-control span-2"
+      data-product-image-editor
+      data-max-bytes="{{ product_image_max_bytes }}"
+      data-invalid-message="{{ t('invalid_product_image') }}"
+      data-large-message="{{ t('product_image_too_large') }}"
+    >
+      <label class="product-image-dropzone" for="product-image-input">
+        <input
+          id="product-image-input"
+          class="product-image-input"
+          type="file"
+          name="product_image"
+          accept="image/jpeg,image/png,image/webp"
+        >
+        <span class="product-image-preview" data-image-preview>
+          {% if product_image %}
+          <img src="/products/{{ row_id }}/image" alt="">
+          {% else %}
+          <span class="product-image-empty" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4M5 14v5h14v-5"/></svg>
+          </span>
+          {% endif %}
+        </span>
+        <span class="product-image-copy">
+          <strong>{{ t('product_image') }}</strong>
+          <span>{{ t('replace_product_image') if product_image else t('upload_product_image') }}</span>
+          <small>{{ t('product_image_hint') }}</small>
+          <small class="product-image-filename" data-image-filename aria-live="polite">
+            {{ t('current_product_image') if product_image else t('no_product_image') }}
+          </small>
+        </span>
+        <span class="btn btn-ghost product-image-browse">{{ t('browse_image') }}</span>
+      </label>
+      {% if product_image %}
+      <label class="check product-image-remove">
+        <input type="checkbox" name="remove_product_image" value="1" data-remove-product-image>
+        <span>{{ t('remove_product_image') }}</span>
+      </label>
+      {% endif %}
+      <small class="err product-image-error" data-product-image-error {% if not errors.get('product_image') %}hidden{% endif %}>{{ errors.get('product_image', '') }}</small>
+    </div>
+    {% endif %}
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ t('save') }}</button>
+    <a class="btn btn-ghost" href="/{{ entity }}">{{ t('cancel') }}</a>
+  </div>
+</form>
+{% endblock %}

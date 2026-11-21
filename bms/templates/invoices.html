@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <form class="search" method="get">
+    <label class="sr" for="q">{{ t('search') }}</label>
+    <input id="q" name="q" value="{{ q }}" placeholder="{{ t('search') }}">
+    <button class="btn" type="submit">{{ t('search') }}</button>
+  </form>
+  <p class="count">{{ t('record_count', n=rows|length) }}</p>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>{{ t('number') }}</th><th>{{ t('date') }}</th><th>{{ t('customer') }}</th><th>{{ t('status') }}</th><th class="num">{{ t('total') }}</th></tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><a href="/invoices/{{ row.id }}">{{ row.number }}</a></td>
+          <td>{{ row.sale_date }}</td>
+          <td>{{ row.customer_name or t('walk_in') }}</td>
+          <td><span class="badge badge-{{ row.status }}">{{ t(row.status) }}</span></td>
+          <td class="num">{{ money(row.total) }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="5">{{ t('no_results') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

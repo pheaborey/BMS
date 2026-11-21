@@ -46,7 +46,9 @@ session secret for the offline installation.
 
 Vercel detects the FastAPI application from `app.py` and installs the packages
 listed in `requirements.txt`. Set the Vercel project's Root Directory to
-`bms`; leave the build command and output directory unset.
+`bms`; leave the build command and output directory unset. The repository's
+`bms/vercel.json` install command installs the Python dependencies for this
+root, independently of the React project at the repository root.
 
 Add these environment variables in **Project Settings > Environment Variables**
 for each environment you deploy:
